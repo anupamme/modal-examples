@@ -321,7 +321,7 @@ server_image = (
 
 @app.cls(image=server_image, timeout=10 * MINUTES)
 class WebcamObjDet:
-    @modal.asgi_app()
+    @modal.asgi_app(requires_proxy_auth=True)
     def web(self):
         from fastapi import FastAPI, HTTPException, Request
         from fastapi.responses import HTMLResponse
