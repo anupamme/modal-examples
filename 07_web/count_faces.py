@@ -51,15 +51,23 @@ def count_faces(image_bytes: bytes) -> int:
 
 
 @app.function(
-    image=modal.Image.debian_slim(python_version="3.11").uv_pip_install("inflect")
+    image=modal.Image.debian_slim(python_version="3.11").uv_pip_install(
+        "inflect", "slowapi"
+    )
 )
 @modal.asgi_app()
 def web():
     import inflect
-    from fastapi import FastAPI, File, HTTPException, UploadFile
+    from fastapi import FastAPI, File, HTTPException, Request, UploadFile
     from fastapi.responses import HTMLResponse
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+    from slowapi.util import get_remote_address
 
     app = FastAPI()
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     @app.get("/", response_class=HTMLResponse)
     async def index():
